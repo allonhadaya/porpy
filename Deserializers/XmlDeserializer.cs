@@ -5,9 +5,9 @@ namespace Porpy.Deserializers
 {
     public class XmlDeserializer<TResponse> : IDeserializer<TResponse>
     {
-        public virtual TResponse Deserialize(byte[] reader)
+        public virtual TResponse Deserialize(StreamReader reader)
         {
-            return (TResponse)Serializer().Deserialize(new MemoryStream(reader));
+            return (TResponse)Serializer().Deserialize(reader);
         }
 
         protected virtual XmlSerializer Serializer()

@@ -1,7 +1,9 @@
-﻿namespace Porpy.Serializers
+﻿using System.IO;
+
+namespace Porpy.Serializers
 {
     public interface ISerializer<TRequest>
     {
-        byte[] Serialize(TRequest entity);
+        void Serialize(StreamWriter writer, TRequest entity);
     }
 }

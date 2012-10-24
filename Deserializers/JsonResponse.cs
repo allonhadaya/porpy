@@ -5,7 +5,7 @@ namespace Porpy.Deserializers
 {
     public class JsonResponse<TResponse> : IDeserializer<TResponse>
     {
-        public virtual TResponse Deserialize(TextReader reader)
+        public virtual TResponse Deserialize(StreamReader reader)
         {
             return JsonConvert.DeserializeObject<TResponse>(reader.ReadToEnd());
         }

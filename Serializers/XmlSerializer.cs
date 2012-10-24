@@ -5,12 +5,9 @@ namespace Porpy.Serializers
 {
     public class XmlSerializer<TRequest> : ISerializer<TRequest>
     {
-        public virtual byte[] Serialize(TRequest entity)
+        public virtual void Serialize(StreamWriter writer, TRequest entity)
         {
-            using (var stream = new MemoryStream()) {
-                Serializer().Serialize(stream, entity);
-                return stream.GetBuffer();
-            }
+            Serializer().Serialize(writer, entity);
         }
 
         protected virtual XmlSerializer Serializer()

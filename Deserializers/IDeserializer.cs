@@ -1,7 +1,9 @@
-﻿namespace Porpy.Deserializers
+﻿using System.IO;
+
+namespace Porpy.Deserializers
 {
     public interface IDeserializer<TResponse>
     {
-        TResponse Deserialize(byte[] entity);
+        TResponse Deserialize(StreamReader reader);
     }
 }

@@ -1,13 +1,13 @@
-﻿using System.Text;
+﻿using System.IO;
 using Newtonsoft.Json;
 
 namespace Porpy.Serializers
 {
     public class JsonSerializer<TRequest> : ISerializer<TRequest>
     {
-        public virtual byte[] Serialize(TRequest entity)
+        public virtual void Serialize(StreamWriter writer, TRequest entity)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(entity));
+            writer.Write(JsonConvert.SerializeObject(entity));
         }
     }
 }
