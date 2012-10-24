@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ClientFramework")]
-[assembly: AssemblyDescription("A framework for building client libraries to web services.")]
+[assembly: AssemblyTitle("porpy")]
+[assembly: AssemblyDescription("C# micro-framework for writing client libraries.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ClientFramework")]
+[assembly: AssemblyProduct("porpy")]
 [assembly: AssemblyCopyright("Copyright © Allon Hadaya 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
