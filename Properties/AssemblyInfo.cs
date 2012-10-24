@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("porpy")]
-[assembly: AssemblyDescription("C# micro-framework for writing client libraries.")]
+[assembly: AssemblyDescription("C# micro-framework for web client libraries.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("porpy")]
