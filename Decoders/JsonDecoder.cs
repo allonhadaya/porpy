@@ -5,7 +5,7 @@ namespace Porpy.Decoders
 {
     public class JsonDecoder<TResponse> : EntityDecoder<TResponse>
     {
-        public virtual TResponse Read(StreamReader reader)
+        internal override TResponse Read(StreamReader reader)
         {
             return JsonConvert.DeserializeObject<TResponse>(reader.ReadToEnd());
         }

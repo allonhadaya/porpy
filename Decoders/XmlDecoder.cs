@@ -5,7 +5,7 @@ namespace Porpy.Decoders
 {
     public class XmlDecoder<TResponse> : EntityDecoder<TResponse>
     {
-        public virtual TResponse Read(StreamReader reader)
+        internal override TResponse Read(StreamReader reader)
         {
             return (TResponse)Serializer().Deserialize(reader);
         }

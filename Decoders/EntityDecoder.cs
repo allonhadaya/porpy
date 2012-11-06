@@ -12,7 +12,7 @@ namespace Porpy.Decoders
             Decoder = decoder;
         }
 
-        public virtual TResponse Read(StreamReader reader)
+        internal virtual TResponse Read(StreamReader reader)
         {
             if (Decoder == null) {
                 throw new ArgumentNullException("Decoder");

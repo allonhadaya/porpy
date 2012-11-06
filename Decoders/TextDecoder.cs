@@ -5,7 +5,7 @@ namespace Porpy.Decoders
 {
     public class TextDecoder : EntityDecoder<String>
     {
-        public string Read(StreamReader reader)
+        internal override string Read(StreamReader reader)
         {
             return reader.ReadToEnd();
         }
