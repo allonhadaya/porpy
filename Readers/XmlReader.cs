@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-namespace Porpy.Deserializers
+namespace Porpy.Readers
 {
-    public class XmlDeserializer<TResponse> : IDeserializer<TResponse>
+    public class XmlReader<TResponse> : IReader<TResponse>
     {
-        public virtual TResponse Deserialize(StreamReader reader)
+        public virtual TResponse Read(StreamReader reader)
         {
             return (TResponse)Serializer().Deserialize(reader);
         }

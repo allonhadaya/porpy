@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-namespace Porpy.Serializers
+namespace Porpy.Writers
 {
-    public class XmlSerializer<TRequest> : ISerializer<TRequest>
+    public class XmlWriter<TRequest> : IWriter<TRequest>
     {
-        public virtual void Serialize(StreamWriter writer, TRequest entity)
+        public virtual void Write(StreamWriter writer, TRequest entity)
         {
             Serializer().Serialize(writer, entity);
         }
