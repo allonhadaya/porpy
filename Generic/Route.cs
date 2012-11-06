@@ -109,7 +109,7 @@ namespace Porpy.Generic
 
         protected virtual Boolean MethodHasResponseEntity(String method)
         {
-            return method == "GET";
+            return method != "HEAD";
         }
     }
 }
