@@ -13,12 +13,16 @@ namespace Porpy.Generic
         protected readonly String BaseUri;
         protected readonly EntityEncoder<TRequest> Encoder;
         protected readonly EntityDecoder<TResponse> Decoder;
+        protected readonly Action<HttpWebRequest> Before;
+        protected readonly Action<HttpWebResponse> After;
 
-        internal Route(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder)
+        public Route(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder, Action<HttpWebRequest> before, Action<HttpWebResponse> after)
         {
             BaseUri = baseUri;
             Encoder = encoder;
             Decoder = decoder;
+            Before = before ?? (request => { });
+            After = after ?? (response => { });
         }
 
         public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null)
@@ -43,68 +47,61 @@ namespace Porpy.Generic
 
         protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, TRequest entity = default(TRequest))
         {
-            var request = WebRequest.Create(BuildUri(querystring)) as HttpWebRequest;
-            
+            querystring = querystring ?? new NameValueCollection(0);
+            headers = headers ?? new NameValueCollection(0);
+
+            var request = CreateRequest(querystring);
             request.Method = method;
-            
             request.ContentType = Encoder.ContentType;
-            
-            if (headers != null) {
-                request.Headers.Add(headers);
+            request.Headers.Add(headers);
+            Before(request);
+            WriteRequestEntity(request, entity);
+
+            var response = GetResponseResult(request);
+
+            After(response.Item2);
+
+            if (response.Item2 != null) {
+                if (MethodHasResponseEntity(method)) {
+                    using (var requestReader = new StreamReader(response.Item2.GetResponseStream())) {
+                        return new Response<TResponse>(response.Item1, response.Item2.StatusCode, response.Item2.Headers, Decoder.Read(requestReader));
+                    }
+                }
+                return new Response<TResponse>(response.Item1, response.Item2.StatusCode, response.Item2.Headers, default(TResponse));
             }
 
-            ModifyRequest(request);
+            return new Response<TResponse>(response.Item1, 0, null, default(TResponse));
+        }
 
-            if (MethodHasRequestEntity(method)) {
+        private HttpWebRequest CreateRequest(NameValueCollection querystring)
+        {
+            var uri = String.Format("{0}?{1}", BaseUri,
+                String.Join("&", querystring.AllKeys.Select(key => String.Join("{0}={1}", WebUtility.HtmlEncode(key), WebUtility.HtmlEncode(querystring[key])))));
+
+            return WebRequest.Create(uri) as HttpWebRequest;
+        }
+
+        private void WriteRequestEntity(HttpWebRequest request, TRequest entity)
+        {
+            if (MethodHasRequestEntity(request.Method)) {
                 using (var requestWriter = new StreamWriter(request.GetRequestStream())) {
                     Encoder.Encode(requestWriter, entity);
                 }
             }
-
-            HttpWebResponse response = null;
-
-            HttpStatusCode responseStatus = 0;
-            WebExceptionStatus exceptionStatus = 0;
-            WebHeaderCollection responseHeaders = null;
-            TResponse responseEntity = default(TResponse);
-
-            try {
-                response = request.GetResponse() as HttpWebResponse;
-                exceptionStatus = WebExceptionStatus.Success;
-            } catch (WebException e) {
-                response = e.Response as HttpWebResponse;
-                exceptionStatus = e.Status;
-            }
-
-            if (response != null) {
-                responseStatus = response.StatusCode;
-                responseHeaders = response.Headers;
-                if (MethodHasResponseEntity(method)) {
-                    using (var requestReader = new StreamReader(response.GetResponseStream())) {
-                        responseEntity = Decoder.Read(requestReader);
-                    }
-                }
-            }
-
-            return new Response<TResponse>(responseStatus, exceptionStatus, responseHeaders, responseEntity);
         }
 
-        protected virtual String BuildUri(NameValueCollection query)
-        {
-            if (query == null || query.Count == 0) {
-                return BaseUri;
-            }
-            return BaseUri.TrimEnd('?') + "?" + String.Join("&", query.AllKeys.Select(key => WebUtility.HtmlEncode(key) + "=" + WebUtility.HtmlEncode(query[key])));
-        }
-
-        protected virtual void ModifyRequest(HttpWebRequest request)
-        {
-            // nothing
-        }
-
-        protected virtual Boolean MethodHasRequestEntity(String method)
+        private Boolean MethodHasRequestEntity(String method)
         {
             return method == "POST" || method == "PUT";
+        }
+
+        private Tuple<WebExceptionStatus, HttpWebResponse> GetResponseResult(HttpWebRequest request)
+        {
+            try {
+                return Tuple.Create(WebExceptionStatus.Success, request.GetResponse() as HttpWebResponse);
+            } catch (WebException e) {
+                return Tuple.Create(e.Status, e.Response as HttpWebResponse);
+            }
         }
 
         protected virtual Boolean MethodHasResponseEntity(String method)

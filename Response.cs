@@ -10,14 +10,16 @@ namespace Porpy
         public readonly WebHeaderCollection Headers;
         public readonly TResponse Entity;
 
-        public virtual Boolean Success { get { return Exception == WebExceptionStatus.Success; } }
+        public readonly Boolean Success;
 
-        public Response(HttpStatusCode statusCode, WebExceptionStatus exception, WebHeaderCollection headers, TResponse entity)
+        public Response(WebExceptionStatus exception, HttpStatusCode statusCode, WebHeaderCollection headers, TResponse entity)
         {
-            StatusCode = statusCode;
             Exception = exception;
+            StatusCode = statusCode;
             Headers = headers;
             Entity = entity;
+
+            Success = exception == WebExceptionStatus.Success && (int)statusCode < 400;
         }
     }
 }

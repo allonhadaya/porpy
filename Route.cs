@@ -1,36 +1,31 @@
 ﻿using System;
-using System.IO;
+using System.Net;
+using Porpy.Decoders;
 using Porpy.Encoders;
 using Porpy.Generic;
-using Porpy.Decoders;
 
 namespace Porpy
 {
     public static class Route
     {
-        public static Route<String, String> Create(String baseUri)
+        public static Route<String, String> Create(String baseUri, Action<HttpWebRequest> before = null, Action<HttpWebResponse> after = null)
         {
-            return new Route<string,string>(baseUri, new TextEncoder(), new TextDecoder());
+            return new Route<String, String>(baseUri, new TextEncoder(), new TextDecoder(), before, after);
         }
 
-        public static Route<String, TResponse> Create<TResponse>(String baseUri, EntityDecoder<TResponse> decoder)
+        public static Route<String, TResponse> Create<TResponse>(String baseUri, EntityDecoder<TResponse> decoder, Action<HttpWebRequest> before = null, Action<HttpWebResponse> after = null)
         {
-            return new Route<String, TResponse>(baseUri, new TextEncoder(), decoder);
+            return new Route<String, TResponse>(baseUri, new TextEncoder(), decoder, before, after);
         }
 
-        public static Route<TRequest, String> Create<TRequest>(String baseUri, EntityEncoder<TRequest> encoder)
+        public static Route<TRequest, String> Create<TRequest>(String baseUri, EntityEncoder<TRequest> encoder, Action<HttpWebRequest> before = null, Action<HttpWebResponse> after = null)
         {
-            return new Route<TRequest, String>(baseUri, encoder, new TextDecoder());
+            return new Route<TRequest, String>(baseUri, encoder, new TextDecoder(), before, after);
         }
 
-        public static Route<TRequest, TResponse> Create<TRequest, TResponse>(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder)
+        public static Route<TRequest, TResponse> Create<TRequest, TResponse>(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder, Action<HttpWebRequest> before = null, Action<HttpWebResponse> after = null)
         {
-            return new Route<TRequest, TResponse>(baseUri, encoder, decoder);
-        }
-
-        public static Route<TRequest, TResponse> Create<TRequest, TResponse>(String baseUri, Action<StreamWriter, TRequest> encoder, String contentType, Func<StreamReader, TResponse> decoder)
-        {
-            return new Route<TRequest, TResponse>(baseUri, new EntityEncoder<TRequest>(contentType, encoder), new EntityDecoder<TResponse>(decoder));
+            return new Route<TRequest, TResponse>(baseUri, encoder, decoder, before, after);
         }
     }
 }
