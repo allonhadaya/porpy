@@ -14,7 +14,7 @@ namespace Porpy.Generic
         protected readonly IWriter<TRequest> Writer;
         protected readonly IReader<TResponse> Reader;
 
-        public Route(String baseUri, IWriter<TRequest> writer, IReader<TResponse> reader)
+        internal Route(String baseUri, IWriter<TRequest> writer, IReader<TResponse> reader)
         {
             BaseUri = baseUri;
             Writer = writer;
