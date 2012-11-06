@@ -4,21 +4,21 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using Porpy.Readers;
-using Porpy.Writers;
+using Porpy.Encoders;
 
 namespace Porpy.Generic
 {
     public class Route<TRequest, TResponse>
     {
         protected readonly String BaseUri;
-        protected readonly IWriter<TRequest> Writer;
-        protected readonly IReader<TResponse> Reader;
+        protected readonly EntityEncoder<TRequest> Encoder;
+        protected readonly EntityDecoder<TResponse> Decoder;
 
-        internal Route(String baseUri, IWriter<TRequest> writer, IReader<TResponse> reader)
+        internal Route(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder)
         {
             BaseUri = baseUri;
-            Writer = writer;
-            Reader = reader;
+            Encoder = encoder;
+            Decoder = decoder;
         }
 
         public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null)
@@ -45,6 +45,7 @@ namespace Porpy.Generic
         {
             var request = WebRequest.Create(BuildUri(querystring)) as HttpWebRequest;
             request.Method = method;
+            request.ContentType = Encoder.ContentType;
             if (headers != null) {
                 request.Headers.Add(headers);
             }
@@ -53,7 +54,7 @@ namespace Porpy.Generic
 
             if (MethodHasRequestEntity(method)) {
                 using (var requestWriter = new StreamWriter(request.GetRequestStream())) {
-                    Writer.Write(requestWriter, entity);
+                    Encoder.Encode(requestWriter, entity);
                 }
             }
 
@@ -77,7 +78,7 @@ namespace Porpy.Generic
                 responseHeaders = response.Headers;
                 if (MethodHasResponseEntity(method)) {
                     using (var requestReader = new StreamReader(response.GetResponseStream())) {
-                        responseEntity = Reader.Read(requestReader);
+                        responseEntity = Decoder.Read(requestReader);
                     }
                 }
             }
