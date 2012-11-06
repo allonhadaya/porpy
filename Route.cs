@@ -2,7 +2,7 @@
 using System.IO;
 using Porpy.Encoders;
 using Porpy.Generic;
-using Porpy.Readers;
+using Porpy.Decoders;
 
 namespace Porpy
 {

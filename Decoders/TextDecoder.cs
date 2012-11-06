@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Porpy.Readers
+namespace Porpy.Decoders
 {
     public class TextDecoder : EntityDecoder<String>
     {

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Newtonsoft.Json;
 
-namespace Porpy.Readers
+namespace Porpy.Decoders
 {
     public class JsonDecoder<TResponse> : EntityDecoder<TResponse>
     {

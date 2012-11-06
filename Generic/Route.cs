@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Porpy.Readers;
+using Porpy.Decoders;
 using Porpy.Encoders;
 
 namespace Porpy.Generic
@@ -44,8 +44,11 @@ namespace Porpy.Generic
         protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, TRequest entity = default(TRequest))
         {
             var request = WebRequest.Create(BuildUri(querystring)) as HttpWebRequest;
+            
             request.Method = method;
+            
             request.ContentType = Encoder.ContentType;
+            
             if (headers != null) {
                 request.Headers.Add(headers);
             }
