@@ -4,9 +4,9 @@ using System;
 
 namespace Porpy.Encoders
 {
-    public class JsonWriter<TRequest> : EntityEncoder<TRequest>
+    public class JsonEncoder<TRequest> : EntityEncoder<TRequest>
     {
-        public JsonWriter(String contentType = "text/json")
+        public JsonEncoder(String contentType = "application/json")
             : base(contentType)
         {
             // nothing

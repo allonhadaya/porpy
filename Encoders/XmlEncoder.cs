@@ -4,9 +4,9 @@ using System.Xml.Serialization;
 
 namespace Porpy.Encoders
 {
-    public class XmlWriter<TRequest> : EntityEncoder<TRequest>
+    public class XmlEncoder<TRequest> : EntityEncoder<TRequest>
     {
-        public XmlWriter(String contentType = "text/xml")
+        public XmlEncoder(String contentType = "application/xml")
             : base(contentType)
         {
             // nothing

@@ -5,21 +5,20 @@ namespace Porpy
 {
     public class Response<TResponse>
     {
-        public readonly HttpStatusCode StatusCode;
-        public readonly WebExceptionStatus Exception;
-        public readonly WebHeaderCollection Headers;
+        public readonly HttpWebResponse RawResponse;
+        public readonly WebExceptionStatus WebExceptionStatus;
         public readonly TResponse Entity;
-
         public readonly Boolean Success;
 
-        public Response(WebExceptionStatus exception, HttpStatusCode statusCode, WebHeaderCollection headers, TResponse entity)
+        public Response(HttpWebResponse rawResponse, WebExceptionStatus webExceptionStatus, TResponse entity)
         {
-            Exception = exception;
-            StatusCode = statusCode;
-            Headers = headers;
+            RawResponse = rawResponse;
+            WebExceptionStatus = webExceptionStatus;
             Entity = entity;
-
-            Success = exception == WebExceptionStatus.Success && (int)statusCode < 400;
+            Success =
+                webExceptionStatus == WebExceptionStatus.Success &&
+                rawResponse != null &&
+                (int)rawResponse.StatusCode < 400;
         }
     }
 }

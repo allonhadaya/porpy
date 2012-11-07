@@ -10,72 +10,74 @@ namespace Porpy.Generic
 {
     public class Route<TRequest, TResponse>
     {
-        protected readonly String BaseUri;
+        protected readonly String Path;
         protected readonly EntityEncoder<TRequest> Encoder;
         protected readonly EntityDecoder<TResponse> Decoder;
-        protected readonly Action<HttpWebRequest> Before;
-        protected readonly Action<HttpWebResponse> After;
 
-        public Route(String baseUri, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder, Action<HttpWebRequest> before, Action<HttpWebResponse> after)
+        public Route(String path, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder)
         {
-            BaseUri = baseUri;
+            Path = path;
             Encoder = encoder;
             Decoder = decoder;
-            Before = before ?? (request => { });
-            After = after ?? (response => { });
         }
 
-        public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null)
+        public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
         {
-            return Call("GET", querystring, headers);
+            return Call("GET", querystring, headers, before);
         }
 
-        public Response<TResponse> Post(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null)
+        public Response<TResponse> Post(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
         {
-            return Call("POST", querystring, headers, entity);
+            return Call("POST", querystring, headers, before, entity);
         }
 
-        public Response<TResponse> Put(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null)
+        public Response<TResponse> Put(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
         {
-            return Call("PUT", querystring, headers, entity);
+            return Call("PUT", querystring, headers, before, entity);
         }
 
-        public Response<TResponse> Delete(NameValueCollection querystring = null, NameValueCollection headers = null)
+        public Response<TResponse> Delete(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
         {
-            return Call("DELETE", querystring, headers);
+            return Call("DELETE", querystring, headers, before);
         }
 
-        protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, TRequest entity = default(TRequest))
+        protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, Action<HttpWebRequest> before, TRequest entity = default(TRequest))
         {
             querystring = querystring ?? new NameValueCollection(0);
             headers = headers ?? new NameValueCollection(0);
+            before = before ?? (r => { });
 
             var request = CreateRequest(querystring);
             request.Method = method;
             request.ContentType = Encoder.ContentType;
             request.Headers.Add(headers);
-            Before(request);
+            before(request);
             WriteRequestEntity(request, entity);
 
-            var response = GetResponseResult(request);
+            HttpWebResponse rawResponse;
+            WebExceptionStatus webExceptionStatus;
+            TResponse responseEntity = default(TResponse);
 
-            After(response.Item2);
-
-            if (response.Item2 != null) {
-                if (MethodHasResponseEntity(method)) {
-                    using (var requestReader = new StreamReader(response.Item2.GetResponseStream())) {
-                        return new Response<TResponse>(response.Item1, response.Item2.StatusCode, response.Item2.Headers, Decoder.Read(requestReader));
-                    }
-                }
-                return new Response<TResponse>(response.Item1, response.Item2.StatusCode, response.Item2.Headers, default(TResponse));
+            try {
+                rawResponse = request.GetResponse() as HttpWebResponse;
+                webExceptionStatus = WebExceptionStatus.Success;
+            } catch (WebException e) {
+                rawResponse = e.Response as HttpWebResponse;
+                webExceptionStatus = e.Status;
             }
 
-            return new Response<TResponse>(response.Item1, 0, null, default(TResponse));
+            if (rawResponse != null && MethodHasResponseEntity(method)) {
+                using (var requestReader = new StreamReader(rawResponse.GetResponseStream())) {
+                    responseEntity = Decoder.Read(requestReader);
+                }
+            }
+
+            return new Response<TResponse>(rawResponse, webExceptionStatus, responseEntity);
         }
 
         private HttpWebRequest CreateRequest(NameValueCollection querystring)
         {
-            var uri = String.Format("{0}?{1}", BaseUri,
+            var uri = String.Format("{0}?{1}", Path,
                 String.Join("&", querystring.AllKeys.Select(key => String.Join("{0}={1}", WebUtility.HtmlEncode(key), WebUtility.HtmlEncode(querystring[key])))));
 
             return WebRequest.Create(uri) as HttpWebRequest;
@@ -93,15 +95,6 @@ namespace Porpy.Generic
         private Boolean MethodHasRequestEntity(String method)
         {
             return method == "POST" || method == "PUT";
-        }
-
-        private Tuple<WebExceptionStatus, HttpWebResponse> GetResponseResult(HttpWebRequest request)
-        {
-            try {
-                return Tuple.Create(WebExceptionStatus.Success, request.GetResponse() as HttpWebResponse);
-            } catch (WebException e) {
-                return Tuple.Create(e.Status, e.Response as HttpWebResponse);
-            }
         }
 
         protected virtual Boolean MethodHasResponseEntity(String method)
