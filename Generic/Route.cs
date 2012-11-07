@@ -13,6 +13,7 @@ namespace Porpy.Generic
         protected readonly String Path;
         protected readonly EntityEncoder<TRequest> Encoder;
         protected readonly EntityDecoder<TResponse> Decoder;
+        protected Action<HttpWebRequest> GlobalRequestCallback;
 
         public Route(String path, EntityEncoder<TRequest> encoder, EntityDecoder<TResponse> decoder)
         {
@@ -21,37 +22,51 @@ namespace Porpy.Generic
             Decoder = decoder;
         }
 
-        public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
+        public Route<TRequest, TResponse> SetGlobalCallback(Action<HttpWebRequest> globalRequestCallback)
         {
-            return Call("GET", querystring, headers, before);
+            GlobalRequestCallback = globalRequestCallback;
+            return this;
         }
 
-        public Response<TResponse> Post(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
+        public Response<TResponse> Get(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> requestCallback = null)
         {
-            return Call("POST", querystring, headers, before, entity);
+            return Call("GET", querystring, headers, requestCallback);
         }
 
-        public Response<TResponse> Put(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
+        public Response<TResponse> Post(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> requestCallback = null)
         {
-            return Call("PUT", querystring, headers, before, entity);
+            return Call("POST", querystring, headers, requestCallback, entity);
         }
 
-        public Response<TResponse> Delete(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> before = null)
+        public Response<TResponse> Put(TRequest entity, NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> requestCallback = null)
         {
-            return Call("DELETE", querystring, headers, before);
+            return Call("PUT", querystring, headers, requestCallback, entity);
         }
 
-        protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, Action<HttpWebRequest> before, TRequest entity = default(TRequest))
+        public Response<TResponse> Delete(NameValueCollection querystring = null, NameValueCollection headers = null, Action<HttpWebRequest> requestCallback = null)
+        {
+            return Call("DELETE", querystring, headers, requestCallback);
+        }
+
+        protected virtual Response<TResponse> Call(String method, NameValueCollection querystring, NameValueCollection headers, Action<HttpWebRequest> requestCallback, TRequest entity = default(TRequest))
         {
             querystring = querystring ?? new NameValueCollection(0);
             headers = headers ?? new NameValueCollection(0);
-            before = before ?? (r => { });
+
+            Action<HttpWebRequest> requestCallbackChain = r => {
+                if (GlobalRequestCallback != null) {
+                    GlobalRequestCallback(r);
+                }
+                if (requestCallback != null) {
+                    requestCallback(r);
+                }
+            };
 
             var request = CreateRequest(querystring);
             request.Method = method;
             request.ContentType = Encoder.ContentType;
             request.Headers.Add(headers);
-            before(request);
+            requestCallbackChain(request);
             WriteRequestEntity(request, entity);
 
             HttpWebResponse rawResponse;
@@ -78,7 +93,8 @@ namespace Porpy.Generic
         private HttpWebRequest CreateRequest(NameValueCollection querystring)
         {
             var uri = String.Format("{0}?{1}", Path,
-                String.Join("&", querystring.AllKeys.Select(key => String.Join("{0}={1}", WebUtility.HtmlEncode(key), WebUtility.HtmlEncode(querystring[key])))));
+                String.Join("&", querystring.AllKeys.Select(key => String.Join("{0}={1}", WebUtility.HtmlEncode(key), WebUtility.HtmlEncode(querystring[key])))))
+                .TrimEnd('?');
 
             return WebRequest.Create(uri) as HttpWebRequest;
         }
