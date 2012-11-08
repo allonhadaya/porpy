@@ -92,10 +92,7 @@ namespace Porpy.Generic
 
         private HttpWebRequest CreateRequest(NameValueCollection querystring)
         {
-            var uri = String.Format("{0}?{1}", Path,
-                String.Join("&", querystring.AllKeys.Select(key => String.Join("{0}={1}", WebUtility.HtmlEncode(key), WebUtility.HtmlEncode(querystring[key])))))
-                .TrimEnd('?');
-
+            var uri = String.Format("{0}?{1}", Path, Utils.UrlEncode(querystring)).TrimEnd('?');
             return WebRequest.Create(uri) as HttpWebRequest;
         }
 

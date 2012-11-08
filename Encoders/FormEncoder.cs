@@ -6,9 +6,9 @@ using System.Net;
 
 namespace Porpy.Encoders
 {
-    class FormEncoder : EntityEncoder<NameValueCollection>
+    public class FormEncoder : EntityEncoder<NameValueCollection>
     {
-        public FormEncoder(String contentType = "formWhatever")
+        public FormEncoder(String contentType = "multipart/form-data")
             : base(contentType)
         {
             // nothing
@@ -16,7 +16,8 @@ namespace Porpy.Encoders
 
         internal override void Encode(StreamWriter writer, NameValueCollection entity)
         {
-            writer.Write(String.Join("&", entity.AllKeys.Select(key => WebUtility.HtmlEncode(key) + "=" + WebUtility.HtmlEncode(entity[key]))));
+            var body = Utils.UrlEncode(entity);
+            writer.Write(body);
         }
     }
 }
